@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option java_package = "protocol";
+option java_outer_classname = "Message";
+
+message ArrayMessage {
+    repeated int32 value = 1;
+}

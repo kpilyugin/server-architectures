@@ -1,0 +1,11 @@
+package server;
+
+public enum ServerType {
+  TCP_SINGLE_THREAD,
+  TCP_MULTI_THREAD,
+  TCP_THREAD_POOL,
+  TCP_NON_BLOCKING,
+  TCP_ASYNC,
+  UDP_MULTI_THREAD,
+  UDP_FIXED_THREAD_POOL
+}
