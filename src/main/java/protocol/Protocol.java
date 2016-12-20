@@ -1,6 +1,7 @@
 package protocol;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 
 import static protocol.Message.ArrayMessage;
 
@@ -22,7 +23,11 @@ public class Protocol {
   }
 
   public static int[] fromBytes(byte[] bytes) throws IOException {
-    ArrayMessage message = ArrayMessage.parseFrom(bytes);
+    int headerSize = 4;
+    int length = ByteBuffer.wrap(bytes).getInt();
+    byte[] messageBytes = new byte[length];
+    System.arraycopy(bytes, headerSize, messageBytes, 0, length);
+    ArrayMessage message = ArrayMessage.parseFrom(messageBytes);
     int[] array = new int[message.getValueCount()];
     for (int i = 0; i < array.length; i++) {
       array[i] = message.getValue(i);

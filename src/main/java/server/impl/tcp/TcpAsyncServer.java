@@ -1,6 +1,8 @@
-package server.impl;
+package server.impl.tcp;
 
 import protocol.Protocol;
+import server.impl.MessageBuffer;
+import server.impl.ServerBase;
 import util.InsertionSort;
 
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TcpAsyncServer extends TcpServerBase {
+public class TcpAsyncServer extends ServerBase {
 
   private final ExecutorService workerExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
   private AsynchronousServerSocketChannel serverChannel;

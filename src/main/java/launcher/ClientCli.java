@@ -1,7 +1,7 @@
 package launcher;
 
 import protocol.Protocol;
-import server.impl.TcpServerBase;
+import server.impl.ServerBase;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -11,7 +11,7 @@ import java.util.Random;
 public class ClientCli {
 
   public void run() throws IOException {
-    Socket socket = new Socket("localhost", TcpServerBase.PORT);
+    Socket socket = new Socket("localhost", ServerBase.PORT);
     for (int i = 0; i < 1000; i++) {
 
       int[] array = new Random().ints(10, 0, 10).toArray();

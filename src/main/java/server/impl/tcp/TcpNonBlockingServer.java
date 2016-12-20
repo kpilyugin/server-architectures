@@ -1,6 +1,8 @@
-package server.impl;
+package server.impl.tcp;
 
 import protocol.Protocol;
+import server.impl.MessageBuffer;
+import server.impl.ServerBase;
 import util.InsertionSort;
 
 import java.io.IOException;
@@ -15,7 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TcpNonBlockingServer extends TcpServerBase {
+public class TcpNonBlockingServer extends ServerBase {
 
   private final ExecutorService workerExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
   private ServerSocketChannel serverChannel;
@@ -24,7 +26,7 @@ public class TcpNonBlockingServer extends TcpServerBase {
   @Override
   public void start() throws IOException {
     serverChannel = ServerSocketChannel.open();
-    serverChannel.bind(new InetSocketAddress(TcpServerBase.PORT));
+    serverChannel.bind(new InetSocketAddress(ServerBase.PORT));
     serverChannel.configureBlocking(false);
     selector = Selector.open();
     serverChannel.register(selector, SelectionKey.OP_ACCEPT);

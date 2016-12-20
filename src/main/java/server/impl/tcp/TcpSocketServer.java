@@ -1,6 +1,7 @@
-package server.impl;
+package server.impl.tcp;
 
 import protocol.Protocol;
+import server.impl.ServerBase;
 import util.InsertionSort;
 
 import java.io.EOFException;
@@ -10,9 +11,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
-public abstract class TcpSocketServer extends TcpServerBase {
-
-  public static final int TIMEOUT = 1000;
+public abstract class TcpSocketServer extends ServerBase {
 
   protected ServerSocket serverSocket;
 

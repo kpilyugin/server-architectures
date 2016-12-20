@@ -1,10 +1,9 @@
 package server;
 
 import org.junit.After;
-import org.junit.FixMethodOrder;
 import org.junit.Test;
 import protocol.Protocol;
-import server.impl.TcpServerBase;
+import server.impl.ServerBase;
 import util.TestUtil;
 
 import java.io.IOException;
@@ -26,7 +25,7 @@ public class TcpServerTest {
     server = ServerFactory.create(ServerType.TCP_SINGLE_THREAD);
     server.start();
     for (int i = 0; i < X; i++) {
-      Socket socket = new Socket("localhost", TcpServerBase.PORT);
+      Socket socket = new Socket("localhost", ServerBase.PORT);
       sendAndCheck(socket);
       socket.close();
     }
@@ -55,7 +54,7 @@ public class TcpServerTest {
   private void testPermanent(ServerType type) throws IOException {
     server = ServerFactory.create(type);
     server.start();
-    Socket socket = new Socket("localhost", TcpServerBase.PORT);
+    Socket socket = new Socket("localhost", ServerBase.PORT);
 
     for (int i = 0; i < X; i++) {
       sendAndCheck(socket);
@@ -65,7 +64,7 @@ public class TcpServerTest {
   }
 
   private static void sendAndCheck(Socket socket) throws IOException {
-    int[] array = new Random().ints(10000, 0, 10).toArray();
+    int[] array = new Random().ints(100, 0, 10).toArray();
 
     Protocol.write(array, socket.getOutputStream());
     int[] result = Protocol.read(socket.getInputStream());
