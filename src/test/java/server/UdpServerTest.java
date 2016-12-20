@@ -4,9 +4,10 @@ import client.Client;
 import client.ClientFactory;
 import client.ClientType;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import util.TestUtil;
+import util.ArrayUtil;
 
 import java.io.IOException;
 import java.util.Random;
@@ -51,7 +52,7 @@ public class UdpServerTest {
       if (result == null) {
         numLost++;
       } else {
-        TestUtil.assertSorted(result);
+        Assert.assertTrue(ArrayUtil.isSorted(result));
       }
     }
     System.out.println("Number of lost packets: " + numLost);

@@ -28,7 +28,8 @@ public abstract class TcpSocketServer extends ServerBase {
     while (!serverSocket.isClosed()) {
       try {
         Socket socket = serverSocket.accept();
-        log("new connection: " + socket.getInetAddress());
+        int id = socket.getRemoteSocketAddress().hashCode();
+        statsHandler.connected(id);
         handleClient(socket);
       } catch (SocketTimeoutException | SocketException ignored) {
 
@@ -52,12 +53,15 @@ public abstract class TcpSocketServer extends ServerBase {
 
   protected void processClientRequest(Socket socket) throws IOException {
     try {
+      int id = socket.getRemoteSocketAddress().hashCode();
       int[] array = Protocol.read(socket.getInputStream());
-      log("read array");
+      statsHandler.receivedRequest(id);
+
       InsertionSort.sort(array);
-      log("sorted");
+      statsHandler.sorted(id);
+
       Protocol.write(array, socket.getOutputStream());
-      log("written array");
+      statsHandler.responded(id);
     } catch (EOFException ignored) {
     }
   }

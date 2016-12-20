@@ -1,5 +1,6 @@
 package util;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class InsertionSortTest {
@@ -13,6 +14,6 @@ public class InsertionSortTest {
   
   private void testSort(int[] a) {
     InsertionSort.sort(a);
-    TestUtil.assertSorted(a);
+    Assert.assertTrue(ArrayUtil.isSorted(a));
   }
 }

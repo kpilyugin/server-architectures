@@ -1,7 +1,6 @@
 package server.impl.udp;
 
 import protocol.Protocol;
-import server.impl.MessageBuffer;
 import server.impl.ServerBase;
 import util.InsertionSort;
 
@@ -16,7 +15,8 @@ public abstract class UdpServer extends ServerBase {
   public void start() throws IOException {
     datagramSocket = new DatagramSocket(PORT);
     datagramSocket.setSoTimeout(TIMEOUT);
-    packet = new DatagramPacket(new byte[MessageBuffer.BUFFER_SIZE], MessageBuffer.BUFFER_SIZE);
+    byte[] bytes = new byte[Protocol.MAX_MESSAGE_SIZE];
+    packet = new DatagramPacket(bytes, bytes.length);
     startExecutor();
   }
 
@@ -43,12 +43,16 @@ public abstract class UdpServer extends ServerBase {
   protected abstract void submitRequest(Runnable runnable);
 
   private void processClientRequest(int[] array, SocketAddress address) {
+    int id = address.hashCode();
+    statsHandler.receivedRequest(id);
     InsertionSort.sort(array);
+    statsHandler.sorted(id);
 
     try {
       byte[] result = Protocol.toBytes(array);
       DatagramPacket response = new DatagramPacket(result, result.length, address);
       datagramSocket.send(response);
+      statsHandler.responded(id);
     } catch (SocketException ignored) {
     } catch (IOException e) {
       e.printStackTrace();

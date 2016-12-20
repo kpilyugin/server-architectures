@@ -7,10 +7,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class MessageBuffer {
-  public static final int BUFFER_SIZE = 1000000;
-  public static final int HEADER_SIZE = 4;
 
-  private final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+  private final ByteBuffer buffer = ByteBuffer.allocate(Protocol.MAX_MESSAGE_SIZE);
 
   public ByteBuffer getBuffer() {
     return buffer;
@@ -25,8 +23,8 @@ public class MessageBuffer {
   }
 
   public int[] getMessageIfReady() {
-    if (buffer.position() > HEADER_SIZE) {
-      int length = buffer.getInt(0) + HEADER_SIZE;
+    if (buffer.position() > Protocol.HEADER_SIZE) {
+      int length = buffer.getInt(0) + Protocol.HEADER_SIZE;
       if (buffer.position() >= length) {
         buffer.flip();
         byte[] bytes = new byte[length];

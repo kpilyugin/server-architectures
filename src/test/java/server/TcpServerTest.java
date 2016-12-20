@@ -1,10 +1,11 @@
 package server;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import protocol.Protocol;
 import server.impl.ServerBase;
-import util.TestUtil;
+import util.ArrayUtil;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -68,6 +69,6 @@ public class TcpServerTest {
 
     Protocol.write(array, socket.getOutputStream());
     int[] result = Protocol.read(socket.getInputStream());
-    TestUtil.assertSorted(result);
+    Assert.assertTrue(ArrayUtil.isSorted(result));
   }
 }

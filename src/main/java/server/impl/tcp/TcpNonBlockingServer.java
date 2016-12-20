@@ -65,7 +65,7 @@ public class TcpNonBlockingServer extends ServerBase {
 
     clientChannel.configureBlocking(false);
     clientChannel.register(selector, SelectionKey.OP_READ, new MessageBuffer());
-    System.out.println("connected to " + clientChannel.getRemoteAddress());
+    statsHandler.connected(clientChannel.getRemoteAddress().hashCode());
   }
 
   private void read(SelectionKey key) throws IOException {
@@ -76,6 +76,7 @@ public class TcpNonBlockingServer extends ServerBase {
     }
     int[] array = reader.tryReadMessage(channel);
     if (array != null) {
+      statsHandler.receivedRequest(channel.getRemoteAddress().hashCode());
       workerExecutor.submit(() -> {
         try {
           handleClientRequest(array, channel);
@@ -88,6 +89,8 @@ public class TcpNonBlockingServer extends ServerBase {
 
   private void handleClientRequest(int[] array, SocketChannel channel) throws IOException {
     InsertionSort.sort(array);
+    int id = channel.getRemoteAddress().hashCode();
+    statsHandler.sorted(id);
 
     byte[] message = Protocol.toBytes(array);
     ByteBuffer buffer = ByteBuffer.wrap(message);
@@ -95,6 +98,7 @@ public class TcpNonBlockingServer extends ServerBase {
     while (buffer.hasRemaining()) {
       channel.write(buffer);
     }
+    statsHandler.responded(id);
   }
 
   @Override

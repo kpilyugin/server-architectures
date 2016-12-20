@@ -6,6 +6,9 @@ import java.nio.ByteBuffer;
 import static protocol.Message.ArrayMessage;
 
 public class Protocol {
+  public static final int HEADER_SIZE = 4;
+  public static final int MAX_MESSAGE_SIZE = 1000000;
+
   public static int[] read(InputStream stream) throws IOException {
     int messageLength = new DataInputStream(stream).readInt();
     byte[] bytes = new byte[messageLength];
@@ -13,7 +16,12 @@ public class Protocol {
     while (readCount < bytes.length) {
       readCount += stream.read(bytes, readCount, bytes.length - readCount);
     }
-    return fromBytes(bytes);
+    ArrayMessage message = ArrayMessage.parseFrom(bytes);
+    int[] array = new int[message.getValueCount()];
+    for (int i = 0; i < array.length; i++) {
+      array[i] = message.getValue(i);
+    }
+    return array;
   }
 
   public static void write(int[] array, OutputStream stream) throws IOException {
@@ -23,10 +31,9 @@ public class Protocol {
   }
 
   public static int[] fromBytes(byte[] bytes) throws IOException {
-    int headerSize = 4;
     int length = ByteBuffer.wrap(bytes).getInt();
     byte[] messageBytes = new byte[length];
-    System.arraycopy(bytes, headerSize, messageBytes, 0, length);
+    System.arraycopy(bytes, HEADER_SIZE, messageBytes, 0, length);
     ArrayMessage message = ArrayMessage.parseFrom(messageBytes);
     int[] array = new int[message.getValueCount()];
     for (int i = 0; i < array.length; i++) {

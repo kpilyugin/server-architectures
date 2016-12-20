@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class ServerCli {
   public static void main(String[] args) {
-    ServerType type = ServerType.TCP_NON_BLOCKING;
+    ServerType type = ServerType.TCP_SINGLE_THREAD;
     Server server = ServerFactory.create(type);
     try {
       server.start();
@@ -18,9 +18,12 @@ public class ServerCli {
       try (Scanner scanner = new Scanner(System.in)) {
         while (scanner.hasNextLine()) {
           String line = scanner.nextLine();
-          if (line.equals("exit")) {
-            server.shutdown();
-            System.exit(0);
+          switch (line) {
+            case "exit":
+              server.shutdown();
+              System.exit(0);
+            case "stats":
+              server.printStats();
           }
         }
       }

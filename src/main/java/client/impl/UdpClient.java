@@ -3,7 +3,6 @@ package client.impl;
 import client.Client;
 import protocol.Protocol;
 import server.Server;
-import server.impl.MessageBuffer;
 
 import java.io.IOException;
 import java.net.*;
@@ -11,7 +10,7 @@ import java.net.*;
 public class UdpClient implements Client {
   private InetAddress serverAddress;
   private DatagramSocket socket;
-  private byte[] packetBytes = new byte[MessageBuffer.BUFFER_SIZE];
+  private byte[] packetBytes = new byte[Protocol.MAX_MESSAGE_SIZE];
 
   @Override
   public void connect(InetSocketAddress address) throws IOException {

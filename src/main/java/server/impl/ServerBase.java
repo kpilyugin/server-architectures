@@ -1,16 +1,15 @@
 package server.impl;
 
 import server.Server;
+import stat.StatsHandler;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public abstract class ServerBase extends Server {
-  protected final ExecutorService acceptExecutor = Executors.newSingleThreadExecutor();
+  protected final StatsHandler statsHandler = new StatsHandler();
 
-  protected static void log(String s) {
-    System.out.println(s);
-  }
+  protected final ExecutorService acceptExecutor = Executors.newSingleThreadExecutor();
 
   public void startExecutor() {
     acceptExecutor.submit(this::runServerLoop);
@@ -21,5 +20,13 @@ public abstract class ServerBase extends Server {
   @Override
   public void shutdown() {
     acceptExecutor.shutdownNow();
+  }
+
+  @Override
+  public void printStats() {
+    double averageClientTime = statsHandler.getAverageClientTime();
+    System.out.println("averageClientTime = " + averageClientTime);
+    double averageRequestTime = statsHandler.getAverageRequestTime();
+    System.out.println("averageRequestTime = " + averageRequestTime);
   }
 }

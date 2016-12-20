@@ -45,16 +45,14 @@ public class TcpAsyncServer extends ServerBase {
     workerExecutor.shutdownNow();
   }
 
-  private ByteBuffer processClientRequest(int[] array) throws IOException {
-    InsertionSort.sort(array);
-
-    byte[] message = Protocol.toBytes(array);
-    return ByteBuffer.wrap(message);
-  }
-
   private class AcceptHandler implements CompletionHandler<AsynchronousSocketChannel, Void> {
     @Override
     public void completed(AsynchronousSocketChannel channel, Void attachment) {
+      try {
+        statsHandler.connected(channel.getRemoteAddress().hashCode());
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
       MessageBuffer buffer = new MessageBuffer();
       channel.read(buffer.getBuffer(), channel, new ReadHandler(buffer));
       serverChannel.accept(null, this);
@@ -81,10 +79,20 @@ public class TcpAsyncServer extends ServerBase {
 
       int[] array = messageBuffer.getMessageIfReady();
       if (array != null) {
+        try {
+          statsHandler.receivedRequest(channel.getRemoteAddress().hashCode());
+        } catch (IOException e) {
+          e.printStackTrace();
+          return;
+        }
         workerExecutor.submit(() -> {
           try {
-            ByteBuffer buffer = processClientRequest(array);
-            channel.write(buffer, channel, new WriteHandler(buffer));
+            InsertionSort.sort(array);
+            statsHandler.sorted(channel.getRemoteAddress().hashCode());
+
+            byte[] message = Protocol.toBytes(array);
+            ByteBuffer resultBuffer = ByteBuffer.wrap(message);
+            channel.write(resultBuffer, channel, new WriteHandler(resultBuffer));
           } catch (IOException e) {
             e.printStackTrace();
           }
@@ -112,6 +120,12 @@ public class TcpAsyncServer extends ServerBase {
       if (buffer.hasRemaining()) {
         channel.write(buffer, channel, this);
       } else {
+        try {
+          statsHandler.responded(channel.getRemoteAddress().hashCode());
+        } catch (IOException e) {
+          e.printStackTrace();
+          return;
+        }
         MessageBuffer messageBuffer = new MessageBuffer();
         channel.read(messageBuffer.getBuffer(), channel, new ReadHandler(messageBuffer));
       }
