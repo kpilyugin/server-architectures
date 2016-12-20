@@ -16,9 +16,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TcpNonBlockingServer extends TcpServerBase {
+
+  private final ExecutorService workerExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
   private ServerSocketChannel serverChannel;
   private Selector selector;
-  private ExecutorService workerExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
 
   @Override
   public void start() throws IOException {
@@ -61,12 +62,12 @@ public class TcpNonBlockingServer extends TcpServerBase {
     SocketChannel clientChannel = serverChannel.accept();
 
     clientChannel.configureBlocking(false);
-    clientChannel.register(selector, SelectionKey.OP_READ, new MessagesBuffer());
+    clientChannel.register(selector, SelectionKey.OP_READ, new MessageBuffer());
     System.out.println("connected to " + clientChannel.getRemoteAddress());
   }
 
   private void read(SelectionKey key) throws IOException {
-    MessagesBuffer reader = (MessagesBuffer) key.attachment();
+    MessageBuffer reader = (MessageBuffer) key.attachment();
     final SocketChannel channel = (SocketChannel) key.channel();
     if (Thread.currentThread().isInterrupted()) {
       return;
@@ -105,30 +106,4 @@ public class TcpNonBlockingServer extends TcpServerBase {
     workerExecutor.shutdownNow();
   }
 
-  private static class MessagesBuffer {
-    private static final int BUFFER_SIZE = 1000000;
-
-    private final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-
-    private int[] tryReadMessage(SocketChannel channel) throws IOException {
-      int read = channel.read(buffer);
-      while (read > 0) {
-        read = channel.read(buffer);
-      }
-      System.out.println("tryRead: position = " + buffer.position());
-      if (buffer.position() > 4) {
-        int length = buffer.getInt(0);
-        System.out.println("Length should be " + length);
-        if (buffer.position() >= 4 + length) {
-          buffer.flip();
-          buffer.getInt();
-          byte[] bytes = new byte[length];
-          buffer.get(bytes);
-          buffer.compact();
-          return Protocol.fromBytes(bytes);
-        }
-      }
-      return null;
-    }
-  }
 }

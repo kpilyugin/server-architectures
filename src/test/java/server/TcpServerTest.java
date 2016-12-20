@@ -1,6 +1,7 @@
 package server;
 
 import org.junit.After;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import protocol.Protocol;
 import server.impl.TcpServerBase;
@@ -11,7 +12,7 @@ import java.net.Socket;
 import java.util.Random;
 
 public class TcpServerTest {
-  public static final int X = 100;
+  public static final int X = 10;
 
   private Server server;
 
@@ -43,6 +44,7 @@ public class TcpServerTest {
 
   @Test
   public void testAsync() throws IOException {
+    testPermanent(ServerType.TCP_ASYNC);
   }
 
   @Test
@@ -63,7 +65,7 @@ public class TcpServerTest {
   }
 
   private static void sendAndCheck(Socket socket) throws IOException {
-    int[] array = new Random().ints(10, 0, 10).toArray();
+    int[] array = new Random().ints(10000, 0, 10).toArray();
 
     Protocol.write(array, socket.getOutputStream());
     int[] result = Protocol.read(socket.getInputStream());

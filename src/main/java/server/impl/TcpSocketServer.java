@@ -12,12 +12,14 @@ import java.net.SocketTimeoutException;
 
 public abstract class TcpSocketServer extends TcpServerBase {
 
+  public static final int TIMEOUT = 1000;
+
   protected ServerSocket serverSocket;
 
   @Override
   public void start() throws IOException {
     serverSocket = new ServerSocket(PORT);
-    serverSocket.setSoTimeout(1000);
+    serverSocket.setSoTimeout(TIMEOUT);
     System.out.println("Server started at port " + PORT);
     startExecutor();
   }

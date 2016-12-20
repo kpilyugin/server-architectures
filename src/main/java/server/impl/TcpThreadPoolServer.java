@@ -24,6 +24,6 @@ public class TcpThreadPoolServer extends TcpSocketServer {
   @Override
   public void shutdown() {
     super.shutdown();
-    workerExecutor.shutdown();
+    workerExecutor.shutdownNow();
   }
 }
