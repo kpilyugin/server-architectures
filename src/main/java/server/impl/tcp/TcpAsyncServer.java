@@ -1,8 +1,8 @@
 package server.impl.tcp;
 
 import protocol.Protocol;
+import server.Server;
 import server.impl.MessageBuffer;
-import server.impl.ServerBase;
 import util.InsertionSort;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TcpAsyncServer extends ServerBase {
+public class TcpAsyncServer extends Server {
 
   private final ExecutorService workerExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
   private AsynchronousServerSocketChannel serverChannel;
@@ -60,7 +60,10 @@ public class TcpAsyncServer extends ServerBase {
 
     @Override
     public void failed(Throwable exc, Void attachment) {
-      exc.printStackTrace();
+      if (!isShutdown) {
+        System.err.println("async accept failed:");
+        exc.printStackTrace();
+      }
     }
   }
 
@@ -83,7 +86,6 @@ public class TcpAsyncServer extends ServerBase {
           statsHandler.receivedRequest(channel.getRemoteAddress().hashCode());
         } catch (IOException e) {
           e.printStackTrace();
-          return;
         }
         workerExecutor.submit(() -> {
           try {

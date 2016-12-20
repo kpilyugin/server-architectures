@@ -11,7 +11,7 @@ public class TcpThreadPoolServer extends TcpSocketServer {
   @Override
   protected void handleClient(Socket socket) throws IOException {
     workerExecutor.submit(() -> {
-      while (!socket.isClosed()) {
+      while (!socket.isClosed() && !isShutdown) {
         try {
           processClientRequest(socket);
         } catch (IOException e) {

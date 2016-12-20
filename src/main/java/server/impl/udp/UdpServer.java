@@ -1,13 +1,13 @@
 package server.impl.udp;
 
 import protocol.Protocol;
-import server.impl.ServerBase;
+import server.Server;
 import util.InsertionSort;
 
 import java.io.IOException;
 import java.net.*;
 
-public abstract class UdpServer extends ServerBase {
+public abstract class UdpServer extends Server {
   protected DatagramSocket datagramSocket;
   protected DatagramPacket packet;
 
@@ -22,7 +22,7 @@ public abstract class UdpServer extends ServerBase {
 
   @Override
   protected void runServerLoop() {
-    while (!datagramSocket.isClosed()) {
+    while (!isShutdown) {
       try {
         datagramSocket.receive(packet);
         int[] array = Protocol.fromBytes(packet.getData());

@@ -1,8 +1,8 @@
 package server.impl.tcp;
 
 import protocol.Protocol;
+import server.Server;
 import server.impl.MessageBuffer;
-import server.impl.ServerBase;
 import util.InsertionSort;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TcpNonBlockingServer extends ServerBase {
+public class TcpNonBlockingServer extends Server {
 
   private final ExecutorService workerExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
   private ServerSocketChannel serverChannel;
@@ -26,7 +26,7 @@ public class TcpNonBlockingServer extends ServerBase {
   @Override
   public void start() throws IOException {
     serverChannel = ServerSocketChannel.open();
-    serverChannel.bind(new InetSocketAddress(ServerBase.PORT));
+    serverChannel.bind(new InetSocketAddress(Server.PORT));
     serverChannel.configureBlocking(false);
     selector = Selector.open();
     serverChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -35,7 +35,7 @@ public class TcpNonBlockingServer extends ServerBase {
 
   @Override
   protected void runServerLoop() {
-    while (serverChannel.isOpen()) {
+    while (!isShutdown) {
       try {
         selector.select();
         Set<SelectionKey> selectionKeys = selector.selectedKeys();
@@ -69,11 +69,11 @@ public class TcpNonBlockingServer extends ServerBase {
   }
 
   private void read(SelectionKey key) throws IOException {
-    MessageBuffer reader = (MessageBuffer) key.attachment();
-    final SocketChannel channel = (SocketChannel) key.channel();
-    if (Thread.currentThread().isInterrupted()) {
+    if (isShutdown) {
       return;
     }
+    MessageBuffer reader = (MessageBuffer) key.attachment();
+    final SocketChannel channel = (SocketChannel) key.channel();
     int[] array = reader.tryReadMessage(channel);
     if (array != null) {
       statsHandler.receivedRequest(channel.getRemoteAddress().hashCode());

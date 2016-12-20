@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Random;
 
 public class UdpServerTest {
-  private static final int X = 100;
+  private static final int X = 10;
 
   private Server server;
   private Client client;
