@@ -1,5 +1,9 @@
 package server.impl;
 
+import protocol.Protocol;
+import util.InsertionSort;
+
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -42,6 +46,18 @@ public abstract class TcpSocketServer extends TcpServerBase {
       serverSocket.close();
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  protected void processClientRequest(Socket socket) throws IOException {
+    try {
+      int[] array = Protocol.read(socket.getInputStream());
+      log("read array");
+      InsertionSort.sort(array);
+      log("sorted");
+      Protocol.write(array, socket.getOutputStream());
+      log("written array");
+    } catch (EOFException ignored) {
     }
   }
 }

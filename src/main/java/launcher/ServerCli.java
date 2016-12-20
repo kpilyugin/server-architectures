@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class ServerCli {
   public static void main(String[] args) {
-    ServerType type = ServerType.TCP_MULTI_THREAD;
+    ServerType type = ServerType.TCP_NON_BLOCKING;
     Server server = ServerFactory.create(type);
     try {
       server.start();

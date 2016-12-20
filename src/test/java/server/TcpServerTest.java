@@ -43,7 +43,11 @@ public class TcpServerTest {
 
   @Test
   public void testAsync() throws IOException {
-//    testPermanent(ServerType.TCP_ASYNC);
+  }
+
+  @Test
+  public void testNonBlocking() throws IOException {
+    testPermanent(ServerType.TCP_NON_BLOCKING);
   }
 
   private void testPermanent(ServerType type) throws IOException {
