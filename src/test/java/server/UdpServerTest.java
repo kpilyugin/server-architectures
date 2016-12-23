@@ -10,6 +10,7 @@ import org.junit.Test;
 import util.ArrayUtil;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Random;
 
 public class UdpServerTest {
@@ -41,7 +42,7 @@ public class UdpServerTest {
 
   private void test(ServerType type) throws IOException {
     server = ServerFactory.create(type);
-    client.connect(null);
+    client.connect(InetSocketAddress.createUnresolved("localhost", Server.PORT));
     server.start();
 
     int numLost = 0;

@@ -51,6 +51,8 @@ public class TcpNonBlockingServer extends Server {
             accept(key);
           } else if (key.isReadable()) {
             read(key);
+          } else if (key.isWritable()) {
+            write(key);
           }
         }
       } catch (IOException e) {
@@ -64,7 +66,7 @@ public class TcpNonBlockingServer extends Server {
     SocketChannel clientChannel = serverChannel.accept();
 
     clientChannel.configureBlocking(false);
-    clientChannel.register(selector, SelectionKey.OP_READ, new MessageBuffer());
+    clientChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, new MessageBuffer());
     statsHandler.onConnected(clientChannel.getRemoteAddress().hashCode());
   }
 
@@ -72,14 +74,20 @@ public class TcpNonBlockingServer extends Server {
     if (isShutdown) {
       return;
     }
-    MessageBuffer reader = (MessageBuffer) key.attachment();
+    MessageBuffer buffer = (MessageBuffer) key.attachment();
     final SocketChannel channel = (SocketChannel) key.channel();
-    int[] array = reader.tryReadMessage(channel);
+    if (!buffer.canRead()) {
+      return;
+    }
+    if (buffer.getBuffer().position() == 0) {
+      statsHandler.onConnected(channel.getRemoteAddress().hashCode());
+    }
+    int[] array = buffer.tryReadMessage(channel);
     if (array != null) {
       statsHandler.onReceivedRequest(channel.getRemoteAddress().hashCode());
       workerExecutor.submit(() -> {
         try {
-          handleClientRequest(array, channel);
+          handleClientRequest(array, channel, buffer);
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -87,18 +95,24 @@ public class TcpNonBlockingServer extends Server {
     }
   }
 
-  private void handleClientRequest(int[] array, SocketChannel channel) throws IOException {
+  private void write(SelectionKey key) throws IOException {
+    MessageBuffer buffer = (MessageBuffer) key.attachment();
+    final SocketChannel channel = (SocketChannel) key.channel();
+    if (!buffer.canWrite()) {
+      return;
+    }
+    boolean finished = buffer.tryWriteResult(channel);
+    if (finished) {
+      statsHandler.onResponded(channel.getRemoteAddress().hashCode());
+    }
+  }
+
+  private void handleClientRequest(int[] array, SocketChannel channel, MessageBuffer buffer) throws IOException {
     InsertionSort.sort(array);
     int id = channel.getRemoteAddress().hashCode();
-    statsHandler.onSorted(id);
-
     byte[] message = Protocol.toBytes(array);
-    ByteBuffer buffer = ByteBuffer.wrap(message);
-
-    while (buffer.hasRemaining()) {
-      channel.write(buffer);
-    }
-    statsHandler.onResponded(id);
+    statsHandler.onSorted(id);
+    buffer.setResult(message);
   }
 
   @Override

@@ -5,13 +5,20 @@ import protocol.Protocol;
 import server.Server;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public abstract class TcpClient implements Client {
-  protected Socket socket;
+  private InetSocketAddress socketAddress;
+  private Socket socket;
+
+  @Override
+  public void connect(InetSocketAddress address) throws IOException {
+    socketAddress = address;
+  }
 
   protected void openSocket() throws IOException {
-    socket = new Socket("localhost", Server.PORT);
+    socket = new Socket(socketAddress.getAddress(), socketAddress.getPort());
   }
 
   protected void closeSocket() throws IOException {

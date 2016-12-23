@@ -19,7 +19,6 @@ public abstract class TcpSocketServer extends Server {
   public void start() throws IOException {
     serverSocket = new ServerSocket(PORT);
     serverSocket.setSoTimeout(TIMEOUT);
-    System.out.println("Server started at port " + PORT);
     startExecutor();
   }
 
@@ -28,8 +27,6 @@ public abstract class TcpSocketServer extends Server {
     while (!serverSocket.isClosed()) {
       try {
         Socket socket = serverSocket.accept();
-        int id = socket.getRemoteSocketAddress().hashCode();
-        statsHandler.onConnected(id);
         handleClient(socket);
       } catch (SocketTimeoutException | SocketException ignored) {
 
@@ -54,6 +51,7 @@ public abstract class TcpSocketServer extends Server {
   protected void processClientRequest(Socket socket) throws IOException {
     try {
       int id = socket.getRemoteSocketAddress().hashCode();
+      statsHandler.onConnected(id);
       int[] array = Protocol.read(socket.getInputStream());
       statsHandler.onReceivedRequest(id);
 

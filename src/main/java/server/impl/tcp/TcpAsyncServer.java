@@ -29,7 +29,7 @@ public class TcpAsyncServer extends Server {
   @Override
   protected void runServerLoop() {
     try {
-      Thread.sleep(1000);
+      Thread.sleep(TIMEOUT);
     } catch (InterruptedException ignored) {
     }
   }
@@ -49,13 +49,13 @@ public class TcpAsyncServer extends Server {
     @Override
     public void completed(AsynchronousSocketChannel channel, Void attachment) {
       try {
-        statsHandler.onConnected(channel.getRemoteAddress().hashCode());
+        MessageBuffer buffer = new MessageBuffer();
+        int id = channel.getRemoteAddress().hashCode();
+        channel.read(buffer.getBuffer(), channel, new ReadHandler(buffer, id));
+        serverChannel.accept(null, this);
       } catch (IOException e) {
         e.printStackTrace();
       }
-      MessageBuffer buffer = new MessageBuffer();
-      channel.read(buffer.getBuffer(), channel, new ReadHandler(buffer));
-      serverChannel.accept(null, this);
     }
 
     @Override
@@ -69,9 +69,12 @@ public class TcpAsyncServer extends Server {
 
   private class ReadHandler implements CompletionHandler<Integer, AsynchronousSocketChannel> {
     private final MessageBuffer messageBuffer;
+    private final int clientId;
 
-    public ReadHandler(MessageBuffer messageBuffer) {
+    public ReadHandler(MessageBuffer messageBuffer, int id) {
       this.messageBuffer = messageBuffer;
+      statsHandler.onConnected(id);
+      clientId = id;
     }
 
     @Override
@@ -82,19 +85,14 @@ public class TcpAsyncServer extends Server {
 
       int[] array = messageBuffer.getMessageIfReady();
       if (array != null) {
-        try {
-          statsHandler.onReceivedRequest(channel.getRemoteAddress().hashCode());
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+        statsHandler.onReceivedRequest(clientId);
         workerExecutor.submit(() -> {
           try {
             InsertionSort.sort(array);
-            statsHandler.onSorted(channel.getRemoteAddress().hashCode());
-
+            statsHandler.onSorted(clientId);
             byte[] message = Protocol.toBytes(array);
             ByteBuffer resultBuffer = ByteBuffer.wrap(message);
-            channel.write(resultBuffer, channel, new WriteHandler(resultBuffer));
+            channel.write(resultBuffer, channel, new WriteHandler(resultBuffer, clientId));
           } catch (IOException e) {
             e.printStackTrace();
           }
@@ -112,9 +110,11 @@ public class TcpAsyncServer extends Server {
 
   private class WriteHandler implements CompletionHandler<Integer, AsynchronousSocketChannel> {
     private final ByteBuffer buffer;
+    private final int clientId;
 
-    public WriteHandler(ByteBuffer buffer) {
+    public WriteHandler(ByteBuffer buffer, int id) {
       this.buffer = buffer;
+      clientId = id;
     }
 
     @Override
@@ -129,7 +129,7 @@ public class TcpAsyncServer extends Server {
           return;
         }
         MessageBuffer messageBuffer = new MessageBuffer();
-        channel.read(messageBuffer.getBuffer(), channel, new ReadHandler(messageBuffer));
+        channel.read(messageBuffer.getBuffer(), channel, new ReadHandler(messageBuffer, clientId));
       }
     }
 

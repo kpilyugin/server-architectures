@@ -1,14 +1,8 @@
 package client.impl;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 public class TcpMultiConnectionClient extends TcpClient {
-  @Override
-  public void connect(InetSocketAddress address) {
-
-  }
-
   @Override
   public void sendMessage(int[] array) throws IOException {
     openSocket();
