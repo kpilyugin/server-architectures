@@ -5,35 +5,42 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class StatsHandler {
-  private final Map<Integer, StatsHolder> clientStats = new ConcurrentHashMap<>();
+  private final Map<Integer, ClientStats> clientStats = new ConcurrentHashMap<>();
 
-  public void connected(int id) {
-    StatsHolder stats = clientStats.getOrDefault(id, new StatsHolder());
-    stats.timeConnected = System.currentTimeMillis();
+  public void onConnected(int id) {
+    ClientStats stats = clientStats.getOrDefault(id, new ClientStats());
+    stats.onConnected();
     clientStats.put(id, stats);
   }
 
-  public void receivedRequest(int id) {
-    StatsHolder stats = clientStats.get(id);
-    stats.timeReceived = System.currentTimeMillis();
-    stats.numRequests++;
+  public void onReceivedRequest(int id) {
+    clientStats.get(id).onReceivedRequest();
   }
 
-  public void sorted(int id) {
-    clientStats.get(id).sorted();
+  public void onSorted(int id) {
+    clientStats.get(id).onSorted();
   }
 
-  public void responded(int id) {
-    clientStats.get(id).responded();
+  public void onResponded(int id) {
+    clientStats.get(id).onResponded();
   }
 
   public double getAverageClientTime() {
     return clientStats.values().stream()
-        .collect(Collectors.averagingDouble(stats -> stats.clientTime / stats.numRequests));
+        .collect(Collectors.averagingDouble(ClientStats::getClientTime));
   }
 
   public double getAverageRequestTime() {
     return clientStats.values().stream()
-        .collect(Collectors.averagingDouble(stats -> stats.requestsTime / stats.numRequests));
+        .collect(Collectors.averagingDouble(ClientStats::getRequestTime));
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("[\n");
+    clientStats.values().forEach(builder::append);
+    builder.append("\n]\n");
+    return builder.toString();
   }
 }

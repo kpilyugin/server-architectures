@@ -26,7 +26,11 @@ public abstract class UdpServer extends Server {
       try {
         datagramSocket.receive(packet);
         int[] array = Protocol.fromBytes(packet.getData());
-        submitRequest(() -> processClientRequest(array, packet.getSocketAddress()));
+        SocketAddress address = packet.getSocketAddress();
+        int id = address.hashCode();
+        statsHandler.onConnected(id);
+        statsHandler.onReceivedRequest(id);
+        submitRequest(() -> processClientRequest(array, address));
       } catch (SocketTimeoutException | SocketException ignored) {
       } catch (IOException e) {
         e.printStackTrace();
@@ -43,16 +47,15 @@ public abstract class UdpServer extends Server {
   protected abstract void submitRequest(Runnable runnable);
 
   private void processClientRequest(int[] array, SocketAddress address) {
-    int id = address.hashCode();
-    statsHandler.receivedRequest(id);
     InsertionSort.sort(array);
-    statsHandler.sorted(id);
+    int id = address.hashCode();
+    statsHandler.onSorted(id);
 
     try {
       byte[] result = Protocol.toBytes(array);
       DatagramPacket response = new DatagramPacket(result, result.length, address);
       datagramSocket.send(response);
-      statsHandler.responded(id);
+      statsHandler.onResponded(id);
     } catch (SocketException ignored) {
     } catch (IOException e) {
       e.printStackTrace();

@@ -29,7 +29,7 @@ public abstract class TcpSocketServer extends Server {
       try {
         Socket socket = serverSocket.accept();
         int id = socket.getRemoteSocketAddress().hashCode();
-        statsHandler.connected(id);
+        statsHandler.onConnected(id);
         handleClient(socket);
       } catch (SocketTimeoutException | SocketException ignored) {
 
@@ -55,13 +55,13 @@ public abstract class TcpSocketServer extends Server {
     try {
       int id = socket.getRemoteSocketAddress().hashCode();
       int[] array = Protocol.read(socket.getInputStream());
-      statsHandler.receivedRequest(id);
+      statsHandler.onReceivedRequest(id);
 
       InsertionSort.sort(array);
-      statsHandler.sorted(id);
+      statsHandler.onSorted(id);
 
       Protocol.write(array, socket.getOutputStream());
-      statsHandler.responded(id);
+      statsHandler.onResponded(id);
     } catch (EOFException ignored) {
     }
   }

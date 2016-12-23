@@ -65,7 +65,7 @@ public class TcpNonBlockingServer extends Server {
 
     clientChannel.configureBlocking(false);
     clientChannel.register(selector, SelectionKey.OP_READ, new MessageBuffer());
-    statsHandler.connected(clientChannel.getRemoteAddress().hashCode());
+    statsHandler.onConnected(clientChannel.getRemoteAddress().hashCode());
   }
 
   private void read(SelectionKey key) throws IOException {
@@ -76,7 +76,7 @@ public class TcpNonBlockingServer extends Server {
     final SocketChannel channel = (SocketChannel) key.channel();
     int[] array = reader.tryReadMessage(channel);
     if (array != null) {
-      statsHandler.receivedRequest(channel.getRemoteAddress().hashCode());
+      statsHandler.onReceivedRequest(channel.getRemoteAddress().hashCode());
       workerExecutor.submit(() -> {
         try {
           handleClientRequest(array, channel);
@@ -90,7 +90,7 @@ public class TcpNonBlockingServer extends Server {
   private void handleClientRequest(int[] array, SocketChannel channel) throws IOException {
     InsertionSort.sort(array);
     int id = channel.getRemoteAddress().hashCode();
-    statsHandler.sorted(id);
+    statsHandler.onSorted(id);
 
     byte[] message = Protocol.toBytes(array);
     ByteBuffer buffer = ByteBuffer.wrap(message);
@@ -98,7 +98,7 @@ public class TcpNonBlockingServer extends Server {
     while (buffer.hasRemaining()) {
       channel.write(buffer);
     }
-    statsHandler.responded(id);
+    statsHandler.onResponded(id);
   }
 
   @Override

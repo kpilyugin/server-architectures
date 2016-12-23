@@ -28,6 +28,7 @@ public abstract class Server {
   }
 
   public void printStats() {
+    System.out.println(statsHandler);
     double averageClientTime = statsHandler.getAverageClientTime();
     System.out.println("averageClientTime = " + averageClientTime);
     double averageRequestTime = statsHandler.getAverageRequestTime();

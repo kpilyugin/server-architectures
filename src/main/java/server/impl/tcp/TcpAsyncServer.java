@@ -49,7 +49,7 @@ public class TcpAsyncServer extends Server {
     @Override
     public void completed(AsynchronousSocketChannel channel, Void attachment) {
       try {
-        statsHandler.connected(channel.getRemoteAddress().hashCode());
+        statsHandler.onConnected(channel.getRemoteAddress().hashCode());
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -83,14 +83,14 @@ public class TcpAsyncServer extends Server {
       int[] array = messageBuffer.getMessageIfReady();
       if (array != null) {
         try {
-          statsHandler.receivedRequest(channel.getRemoteAddress().hashCode());
+          statsHandler.onReceivedRequest(channel.getRemoteAddress().hashCode());
         } catch (IOException e) {
           e.printStackTrace();
         }
         workerExecutor.submit(() -> {
           try {
             InsertionSort.sort(array);
-            statsHandler.sorted(channel.getRemoteAddress().hashCode());
+            statsHandler.onSorted(channel.getRemoteAddress().hashCode());
 
             byte[] message = Protocol.toBytes(array);
             ByteBuffer resultBuffer = ByteBuffer.wrap(message);
@@ -123,7 +123,7 @@ public class TcpAsyncServer extends Server {
         channel.write(buffer, channel, this);
       } else {
         try {
-          statsHandler.responded(channel.getRemoteAddress().hashCode());
+          statsHandler.onResponded(channel.getRemoteAddress().hashCode());
         } catch (IOException e) {
           e.printStackTrace();
           return;
