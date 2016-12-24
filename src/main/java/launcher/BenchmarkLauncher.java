@@ -15,6 +15,7 @@ import util.ArrayUtil;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +59,7 @@ public class BenchmarkLauncher {
       params.setType(serverType);
       BenchmarkResult benchmarkResult = new BenchmarkLauncher(params).run();
       try (FileWriter writer = new FileWriter(new File(folder, serverType.name() + ".csv"))) {
-        writer.write("Request time on server, client time on server, client working time\n");
+        writer.write("Request time on server, client time on server, client working time \n");
         for (SingleResult result : benchmarkResult.getResults()) {
           writer.write(result.getServerRequestTime() + ", " + result.getServerClientTime() + ", " + result.getClientWorkingTime() + "\n");
         }
@@ -89,7 +90,9 @@ public class BenchmarkLauncher {
   }
 
   private SingleResult runSingleCase() throws IOException {
+    System.out.println("Connecting to " + params.getHostName());
     try (Socket socket = new Socket(params.getHostName(), RemoteServerLauncher.PORT)) {
+      System.out.println("connected!");
       DataInputStream input = new DataInputStream(socket.getInputStream());
       DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 
@@ -117,8 +120,15 @@ public class BenchmarkLauncher {
           client.connect(new InetSocketAddress(params.getHostName(), params.getPort()));
           for (int j = 0; j < params.getNumRequests(); j++) {
             int[] array = new Random().ints(params.getArraySize(), 0, params.getArraySize()).toArray();
-            client.sendMessage(array);
-            int[] result = client.receiveMessage();
+            int[] result = null;
+            try {
+              client.sendMessage(array);
+              result = client.receiveMessage();
+            } catch (SocketTimeoutException e) {
+              System.out.println("timeout, sending again");
+              j--;
+              continue;
+            }
             if (result == null) {
               packetLosses++;
             } else if (!ArrayUtil.isSorted(result)) {
@@ -127,31 +137,23 @@ public class BenchmarkLauncher {
             Thread.sleep(params.getDelay());
           }
           client.shutdown();
-          return packetLosses * PACKET_LOSS_PENALTY + System.currentTimeMillis() - startTime;
+          if (packetLosses != 0) {
+            System.out.println("Lost " + packetLosses + " packets.");
+          }
+          return System.currentTimeMillis() - startTime;
         } catch (IOException | InterruptedException e) {
           e.printStackTrace();
           return Long.MAX_VALUE;
         }
       }));
     }
-    CountingConsumer consumer = new CountingConsumer();
-    double result = futures.stream().mapToLong(f -> {
+    return futures.stream().mapToLong(f -> {
       try {
         return f.get();
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
         return Long.MAX_VALUE;
       }
-    }).filter(l -> l != Long.MAX_VALUE).peek(consumer).average().orElse(-1);
-    System.out.println("Successful clients: " + consumer.count);
-    return result;
-  }
-
-  private static class CountingConsumer implements LongConsumer {
-    public int count;
-    @Override
-    public void accept(long value) {
-      count++;
-    }
+    }).filter(l -> l != Long.MAX_VALUE).average().orElse(-1);
   }
 }

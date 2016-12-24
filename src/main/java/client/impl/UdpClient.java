@@ -32,10 +32,10 @@ public class UdpClient implements Client {
     DatagramPacket packet = new DatagramPacket(packetBytes, packetBytes.length);
     try {
       socket.receive(packet);
+      return Protocol.fromBytes(packetBytes);
     } catch (SocketTimeoutException ignored) {
       return null;
     }
-    return Protocol.fromBytes(packetBytes);
   }
 
   @Override
