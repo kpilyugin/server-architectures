@@ -19,10 +19,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.LongConsumer;
 
 public class BenchmarkLauncher {
@@ -38,14 +35,14 @@ public class BenchmarkLauncher {
 
   public static void main(String[] args) throws IOException {
     BenchmarkParams params = BenchmarkParams.builder()
-        .numClients(20)
+        .numClients(5)
         .arraySize(1000)
         .delay(0)
-        .numRequests(50)
-        .hostName("localhost")
+        .numRequests(5)
+        .hostName(args[0])
         .port(Server.PORT)
         .build();
-    runAll(params, VaryingType.ARRAY_SIZE, 1000, 20000, 1000);
+    runAll(params, VaryingType.ARRAY_SIZE, 1000, 20000, 2000);
   }
 
   private static void runAll(BenchmarkParams params, VaryingType type, int from, int to, int step) throws IOException {
@@ -61,9 +58,9 @@ public class BenchmarkLauncher {
       params.setType(serverType);
       BenchmarkResult benchmarkResult = new BenchmarkLauncher(params).run();
       try (FileWriter writer = new FileWriter(new File(folder, serverType.name() + ".csv"))) {
-        writer.write("Request time on server, client time on server, client working time");
+        writer.write("Request time on server, client time on server, client working time\n");
         for (SingleResult result : benchmarkResult.getResults()) {
-          writer.write(result.getServerRequestTime() + "," + result.getServerClientTime() + ", " + result.getClientWorkingTime());
+          writer.write(result.getServerRequestTime() + ", " + result.getServerClientTime() + ", " + result.getClientWorkingTime() + "\n");
         }
       }
     }
