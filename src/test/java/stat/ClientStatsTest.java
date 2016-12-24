@@ -19,7 +19,7 @@ public class ClientStatsTest {
       Thread.sleep(50);
       stats.onResponded();
     }
-    Assert.assertEquals(200, stats.getRequestTime(), 40);
-    Assert.assertEquals(100, stats.getClientTime(), 20);
+    Assert.assertEquals(100, stats.getRequestTime(), 40);
+    Assert.assertEquals(200, stats.getClientTime(), 20);
   }
 }

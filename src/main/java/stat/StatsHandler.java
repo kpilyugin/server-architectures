@@ -35,6 +35,10 @@ public class StatsHandler {
         .collect(Collectors.averagingDouble(ClientStats::getRequestTime));
   }
 
+  public ServerStats collectStats() {
+    return new ServerStats(getAverageRequestTime(), getAverageClientTime());
+  }
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();

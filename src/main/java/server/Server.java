@@ -1,5 +1,6 @@
 package server;
 
+import stat.ServerStats;
 import stat.StatsHandler;
 
 import java.io.IOException;
@@ -25,6 +26,10 @@ public abstract class Server {
   public void shutdown() {
     isShutdown = true;
     acceptExecutor.shutdownNow();
+  }
+
+  public ServerStats collectStats() {
+    return statsHandler.collectStats();
   }
 
   public void printStats() {
