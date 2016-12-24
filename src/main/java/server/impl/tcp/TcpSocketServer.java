@@ -19,6 +19,7 @@ public abstract class TcpSocketServer extends Server {
   public void start() throws IOException {
     serverSocket = new ServerSocket(PORT);
     serverSocket.setSoTimeout(TIMEOUT);
+    serverSocket.setReuseAddress(true);
     startExecutor();
   }
 

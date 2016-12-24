@@ -7,13 +7,14 @@ import protocol.Protocol;
 import util.ArrayUtil;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.util.Random;
 
 public class TcpServerTest {
   public static final int X = 10;
 
-  private server.Server server;
+  private Server server;
 
   @After
   public void shutdown() {
@@ -21,13 +22,26 @@ public class TcpServerTest {
   }
 
   @Test
-  public void testSingleThread() throws IOException {
+  public void testSingleThread() throws Exception {
     server = ServerFactory.create(ServerType.TCP_SINGLE_THREAD);
     server.start();
+    Thread[] threads = new Thread[X];
     for (int i = 0; i < X; i++) {
-      Socket socket = new Socket("localhost", Server.PORT);
-      sendAndCheck(socket);
-      socket.close();
+      threads[i] = new Thread(() -> {
+        try {
+          Socket socket = new Socket("localhost", Server.PORT);
+          sendAndCheck(socket);
+          socket.close();
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
+      });
+    }
+    for (Thread thread : threads) {
+      thread.start();
+    }
+    for (Thread thread : threads) {
+      thread.join();
     }
   }
 

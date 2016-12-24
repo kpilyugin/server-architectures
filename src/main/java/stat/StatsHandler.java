@@ -8,9 +8,8 @@ public class StatsHandler {
   private final Map<Integer, ClientStats> clientStats = new ConcurrentHashMap<>();
 
   public void onConnected(int id) {
-    ClientStats stats = clientStats.getOrDefault(id, new ClientStats());
-    stats.onConnected();
-    clientStats.put(id, stats);
+    clientStats.putIfAbsent(id, new ClientStats());
+    clientStats.get(id).onConnected();
   }
 
   public void onReceivedRequest(int id) {

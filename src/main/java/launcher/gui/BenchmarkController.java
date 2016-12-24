@@ -55,11 +55,16 @@ public class BenchmarkController implements Initializable {
   public VBox chartContainer;
 
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  private Task<BenchmarkResult> benchmarkTask;
 
   @Override
   public void initialize(URL location, ResourceBundle resources) {
     startButton.setOnMouseClicked(mouseEvent -> {
-      Task<BenchmarkResult> benchmarkTask = new Task<BenchmarkResult>() {
+      if (benchmarkTask != null) {
+        benchmarkTask.cancel();
+      }
+      chartContainer.getChildren().clear();
+      benchmarkTask = new Task<BenchmarkResult>() {
         @Override
         protected BenchmarkResult call() throws Exception {
           return runBenchmark();
@@ -70,6 +75,7 @@ public class BenchmarkController implements Initializable {
       benchmarkTask.setOnFailed(event -> {
         //noinspection ThrowableResultOfMethodCallIgnored
         Throwable throwable = benchmarkTask.getException();
+        throwable.printStackTrace();
         if (throwable instanceof ConnectException) {
           statusLabel.setText("No connection");
         } else {
@@ -78,7 +84,6 @@ public class BenchmarkController implements Initializable {
       });
       benchmarkTask.setOnSucceeded(event -> {
         BenchmarkResult result = benchmarkTask.getValue();
-        chartContainer.getChildren().clear();
         addResultChart(result, SingleResult::getServerRequestTime, "Request handling time on server");
         addResultChart(result, SingleResult::getServerClientTime, "Client handling time on server");
         addResultChart(result, SingleResult::getClientWorkingTime, "Client working time");

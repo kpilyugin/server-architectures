@@ -1,20 +1,21 @@
 package launcher;
 
 import benchmark.BenchmarkParams;
+import benchmark.BenchmarkParams.VaryingType;
+import benchmark.BenchmarkResult;
+import benchmark.SingleResult;
 import client.Client;
 import client.ClientFactory;
 import client.ClientType;
-import benchmark.BenchmarkResult;
-import benchmark.SingleResult;
+import org.apache.commons.io.FileUtils;
 import server.Server;
 import server.ServerType;
 import util.ArrayUtil;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -22,7 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+import java.util.function.LongConsumer;
 
 public class BenchmarkLauncher {
 
@@ -36,24 +37,36 @@ public class BenchmarkLauncher {
   }
 
   public static void main(String[] args) throws IOException {
-    ServerType serverType = ServerType.TCP_ASYNC;
-    BenchmarkParams parameters = BenchmarkParams.builder()
-        .type(serverType)
-        .numClients(50)
-        .arraySize(10000)
+    BenchmarkParams params = BenchmarkParams.builder()
+        .numClients(20)
+        .arraySize(1000)
         .delay(0)
-        .numRequests(10)
+        .numRequests(50)
         .hostName("localhost")
         .port(Server.PORT)
-        .varyingType(BenchmarkParams.VaryingType.DELAY)
-        .varyingFrom(0)
-        .varyingTo(4)
-        .varyingStep(1)
         .build();
+    runAll(params, VaryingType.ARRAY_SIZE, 1000, 20000, 1000);
+  }
 
-    BenchmarkResult result = new BenchmarkLauncher(parameters).run();
-    System.out.println("Benchmark finished");
-    System.out.println(result);
+  private static void runAll(BenchmarkParams params, VaryingType type, int from, int to, int step) throws IOException {
+    params.setVaryingType(type);
+    params.setVaryingFrom(from);
+    params.setVaryingTo(to);
+    params.setVaryingStep(step);
+
+    File folder = new File("results", type.name());
+    FileUtils.writeStringToFile(new File(folder, "params.txt"), params.getParamsInfo(), Charset.defaultCharset());
+
+    for (ServerType serverType : ServerType.values()) {
+      params.setType(serverType);
+      BenchmarkResult benchmarkResult = new BenchmarkLauncher(params).run();
+      try (FileWriter writer = new FileWriter(new File(folder, serverType.name() + ".csv"))) {
+        writer.write("Request time on server, client time on server, client working time");
+        for (SingleResult result : benchmarkResult.getResults()) {
+          writer.write(result.getServerRequestTime() + "," + result.getServerClientTime() + ", " + result.getClientWorkingTime());
+        }
+      }
+    }
   }
 
   public BenchmarkResult run() throws IOException {
@@ -63,8 +76,8 @@ public class BenchmarkLauncher {
         case NUM_CLIENTS:
           params.setNumClients(value);
           break;
-        case NUM_REQUESTS:
-          params.setNumRequests(value);
+        case ARRAY_SIZE:
+          params.setArraySize(value);
           break;
         case DELAY:
           params.setDelay(value);
@@ -74,6 +87,7 @@ public class BenchmarkLauncher {
       System.out.println("Single test case completed: " + singleResult);
       result.addResult(singleResult);
     }
+    clientExecutor.shutdownNow();
     return result;
   }
 
@@ -123,13 +137,24 @@ public class BenchmarkLauncher {
         }
       }));
     }
-    return futures.stream().collect(Collectors.averagingLong(f -> {
+    CountingConsumer consumer = new CountingConsumer();
+    double result = futures.stream().mapToLong(f -> {
       try {
         return f.get();
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
         return Long.MAX_VALUE;
       }
-    }));
+    }).filter(l -> l != Long.MAX_VALUE).peek(consumer).average().orElse(-1);
+    System.out.println("Successful clients: " + consumer.count);
+    return result;
+  }
+
+  private static class CountingConsumer implements LongConsumer {
+    public int count;
+    @Override
+    public void accept(long value) {
+      count++;
+    }
   }
 }

@@ -42,7 +42,7 @@ public class UdpServerTest {
 
   private void test(ServerType type) throws IOException {
     server = ServerFactory.create(type);
-    client.connect(InetSocketAddress.createUnresolved("localhost", Server.PORT));
+    client.connect(new InetSocketAddress("localhost", Server.PORT));
     server.start();
 
     int numLost = 0;

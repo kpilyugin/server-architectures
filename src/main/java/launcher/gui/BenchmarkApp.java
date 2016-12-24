@@ -15,12 +15,10 @@ public class BenchmarkApp extends Application {
     //noinspection ConstantConditions
     scene.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
     stage.setScene(scene);
-    stage.setTitle("Servers benchmark");
+    stage.setTitle("Server architectures benchmark");
     stage.show();
     BenchmarkController controller = loader.getController();
-    stage.setOnCloseRequest(event -> {
-      controller.shutdown();
-    });
+    stage.setOnCloseRequest(event -> controller.shutdown());
   }
 
   public static void main(String[] args) {

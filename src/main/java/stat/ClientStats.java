@@ -21,9 +21,6 @@ public class ClientStats {
     if (timeReceivedRequest < timeConnected) {
       throw new IllegalStateException("Last snapshot of received request should be after connection");
     }
-//    System.out.println("read time = " + (timeReceivedRequest - timeConnected) +
-//        ", sort time = " + (timeSorted - timeReceivedRequest) +
-//        ", write time = " + (System.currentTimeMillis() - timeSorted));
     clientTime += System.currentTimeMillis() - timeConnected;
   }
 

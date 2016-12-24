@@ -7,7 +7,6 @@ import util.InsertionSort;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -26,7 +25,8 @@ public class TcpNonBlockingServer extends Server {
   @Override
   public void start() throws IOException {
     serverChannel = ServerSocketChannel.open();
-    serverChannel.bind(new InetSocketAddress(Server.PORT));
+    serverChannel.socket().setReuseAddress(true);
+    serverChannel.socket().bind(new InetSocketAddress(Server.PORT));
     serverChannel.configureBlocking(false);
     selector = Selector.open();
     serverChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -119,6 +119,7 @@ public class TcpNonBlockingServer extends Server {
   public void shutdown() {
     super.shutdown();
     try {
+      serverChannel.socket().close();
       serverChannel.close();
     } catch (IOException e) {
       e.printStackTrace();

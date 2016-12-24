@@ -18,6 +18,7 @@ public abstract class TcpClient implements Client {
 
   protected void openSocket() throws IOException {
     socket = new Socket(socketAddress.getAddress(), socketAddress.getPort());
+    socket.setReuseAddress(true);
   }
 
   protected void closeSocket() throws IOException {

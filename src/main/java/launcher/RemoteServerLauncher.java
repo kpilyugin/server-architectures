@@ -12,12 +12,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class RemoteServerLauncher {
-  public static final int PORT = 5432;
+  public static final int PORT = 10432;
 
   public static void main(String[] args) throws IOException {
     try (ServerSocket serverSocket = new ServerSocket(PORT)) {
       while (!serverSocket.isClosed()) {
         Socket socket = serverSocket.accept();
+        System.out.println("Connected to " + socket.getRemoteSocketAddress());
         DataInputStream input = new DataInputStream(socket.getInputStream());
         DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 

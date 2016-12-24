@@ -4,6 +4,10 @@ import lombok.Builder;
 import lombok.Data;
 import server.ServerType;
 
+import static benchmark.BenchmarkParams.VaryingType.ARRAY_SIZE;
+import static benchmark.BenchmarkParams.VaryingType.DELAY;
+import static benchmark.BenchmarkParams.VaryingType.NUM_CLIENTS;
+
 @Builder
 @Data
 public class BenchmarkParams {
@@ -20,7 +24,7 @@ public class BenchmarkParams {
   private int varyingStep;
 
   public enum VaryingType {
-    NUM_REQUESTS("Requests count"),
+    ARRAY_SIZE("Array size"),
     NUM_CLIENTS("Clients count"),
     DELAY("Delay");
 
@@ -34,5 +38,20 @@ public class BenchmarkParams {
     public String toString() {
       return desc;
     }
+  }
+
+  public String getParamsInfo() {
+    return "Array size: " +
+        (varyingType == ARRAY_SIZE ? varyingDesc() : arraySize) +
+        "\nClients count: " +
+        (varyingType == NUM_CLIENTS ? varyingDesc() : numClients) +
+        "\nRequests count: " +
+        numRequests +
+        "\nDelay: " +
+        (varyingType == DELAY ? varyingDesc() : delay);
+  }
+
+  private String varyingDesc() {
+    return "from " + varyingFrom + " to " + varyingTo + " by " + varyingStep;
   }
 }

@@ -8,16 +8,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public abstract class Server {
-  public static final int PORT = 3456;
-  public static final int TIMEOUT = 1000;
+  public static final int PORT = 10456;
+  public static final int TIMEOUT = 10000;
 
+  private final ExecutorService acceptExecutor = Executors.newSingleThreadExecutor();
   protected final StatsHandler statsHandler = new StatsHandler();
-  protected final ExecutorService acceptExecutor = Executors.newSingleThreadExecutor();
   protected volatile boolean isShutdown;
 
   public abstract void start() throws IOException;
 
-  public void startExecutor() {
+  protected void startExecutor() {
     acceptExecutor.submit(this::runServerLoop);
   }
 
@@ -30,13 +30,5 @@ public abstract class Server {
 
   public ServerStats collectStats() {
     return statsHandler.collectStats();
-  }
-
-  public void printStats() {
-    System.out.println(statsHandler);
-    double averageClientTime = statsHandler.getAverageClientTime();
-    System.out.println("averageClientTime = " + averageClientTime);
-    double averageRequestTime = statsHandler.getAverageRequestTime();
-    System.out.println("averageRequestTime = " + averageRequestTime);
   }
 }
