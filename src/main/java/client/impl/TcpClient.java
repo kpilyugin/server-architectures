@@ -2,7 +2,6 @@ package client.impl;
 
 import client.Client;
 import protocol.Protocol;
-import server.Server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

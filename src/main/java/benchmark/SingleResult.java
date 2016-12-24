@@ -1,4 +1,4 @@
-package launcher.result;
+package benchmark;
 
 import lombok.Data;
 

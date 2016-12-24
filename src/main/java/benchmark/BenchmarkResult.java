@@ -1,6 +1,5 @@
-package launcher.result;
+package benchmark;
 
-import launcher.BenchmarkParams;
 import lombok.Data;
 
 import java.util.ArrayList;

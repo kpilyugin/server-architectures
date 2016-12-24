@@ -1,10 +1,11 @@
 package launcher;
 
+import benchmark.BenchmarkParams;
 import client.Client;
 import client.ClientFactory;
 import client.ClientType;
-import launcher.result.BenchmarkResult;
-import launcher.result.SingleResult;
+import benchmark.BenchmarkResult;
+import benchmark.SingleResult;
 import server.Server;
 import server.ServerType;
 import util.ArrayUtil;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 
 public class BenchmarkLauncher {
 
+  private static final long PACKET_LOSS_PENALTY = 100;
+
   private final ExecutorService clientExecutor = Executors.newCachedThreadPool();
   private final BenchmarkParams params;
 
@@ -33,19 +36,19 @@ public class BenchmarkLauncher {
   }
 
   public static void main(String[] args) throws IOException {
-    ServerType serverType = ServerType.UDP_THREAD_POOL;
+    ServerType serverType = ServerType.TCP_ASYNC;
     BenchmarkParams parameters = BenchmarkParams.builder()
         .type(serverType)
-        .numClients(5)
-        .arraySize(1000)
-        .delay(100)
+        .numClients(50)
+        .arraySize(10000)
+        .delay(0)
         .numRequests(10)
         .hostName("localhost")
         .port(Server.PORT)
-        .varyingType(BenchmarkParams.Varying.NUM_CLIENTS)
-        .varyingFrom(1)
-        .varyingTo(10)
-        .step(2)
+        .varyingType(BenchmarkParams.VaryingType.DELAY)
+        .varyingFrom(0)
+        .varyingTo(4)
+        .varyingStep(1)
         .build();
 
     BenchmarkResult result = new BenchmarkLauncher(parameters).run();
@@ -55,7 +58,7 @@ public class BenchmarkLauncher {
 
   public BenchmarkResult run() throws IOException {
     BenchmarkResult result = new BenchmarkResult(params);
-    for (int value = params.getVaryingFrom(); value <= params.getVaryingTo(); value += params.getStep()) {
+    for (int value = params.getVaryingFrom(); value <= params.getVaryingTo(); value += params.getVaryingStep()) {
       switch (params.getVaryingType()) {
         case NUM_CLIENTS:
           params.setNumClients(value);
@@ -98,19 +101,22 @@ public class BenchmarkLauncher {
       futures.add(clientExecutor.submit(() -> {
         try {
           long startTime = System.currentTimeMillis();
+          int packetLosses = 0;
           Client client = ClientFactory.create(ClientType.forServerType(params.getType()));
           client.connect(new InetSocketAddress(params.getHostName(), params.getPort()));
           for (int j = 0; j < params.getNumRequests(); j++) {
             int[] array = new Random().ints(params.getArraySize(), 0, params.getArraySize()).toArray();
             client.sendMessage(array);
             int[] result = client.receiveMessage();
-            if (!ArrayUtil.isSorted(result)) {
+            if (result == null) {
+              packetLosses++;
+            } else if (!ArrayUtil.isSorted(result)) {
               System.err.println("Array is not sorted");
             }
             Thread.sleep(params.getDelay());
           }
           client.shutdown();
-          return System.currentTimeMillis() - startTime;
+          return packetLosses * PACKET_LOSS_PENALTY + System.currentTimeMillis() - startTime;
         } catch (IOException | InterruptedException e) {
           e.printStackTrace();
           return Long.MAX_VALUE;
