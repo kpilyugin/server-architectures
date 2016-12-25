@@ -16,6 +16,7 @@ public class RemoteServerLauncher {
 
   public static void main(String[] args) throws IOException {
     try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+      System.out.println("Started server at port " + PORT);
       while (!serverSocket.isClosed()) {
         Socket socket = serverSocket.accept();
         System.out.println("Connected to " + socket.getRemoteSocketAddress());
