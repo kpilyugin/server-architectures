@@ -1,0 +1,4 @@
+Array size: 500
+Clients count: from 5 to 100 by 10
+Delay: 0
+Requests count: 3
